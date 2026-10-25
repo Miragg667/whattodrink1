@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Тёплое зерно — подбор напитка</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c1410; --bg2:#2a1e17; --card:#34261d; --line:#4a382b;
+    --cream:#f6e9d7; --muted:#c9b39b; --accent:#e8a25a; --accent2:#f3c58c;
+    --ok:#9fd39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--cream);font-family:Manrope,system-ui,sans-serif;min-height:100%}
+  body{padding-bottom:96px}
+  h1,h2,h3{font-family:Unbounded,Manrope,sans-serif;font-weight:700;letter-spacing:-.01em}
+  .wrap{max-width:480px;margin:0 auto;padding:20px 16px}
+  .screen{display:none;animation:fade .25s ease}
+  .screen.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* brand */
+  .brand{text-align:center;padding:18px 0 6px}
+  .brand .logo{font-family:Unbounded;font-size:30px;font-weight:700;color:var(--cream)}
+  .brand .logo span{color:var(--accent)}
+  .brand .sub{color:var(--muted);font-size:13px;margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
+  .table-chip{display:inline-block;margin-top:10px;font-size:12px;color:var(--accent2);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+
+  .hero{position:relative;height:230px;display:grid;place-items:center;margin:8px 0}
+  .hero .glow{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,#e8a25a55,transparent 70%)}
+  .cup{position:relative;width:120px;height:110px}
+  .cup .body{position:absolute;bottom:0;left:0;width:100px;height:86px;background:linear-gradient(160deg,#fff7ec,#e9d6bd);border-radius:6px 6px 40px 40px;box-shadow:0 14px 30px #0008}
+  .cup .handle{position:absolute;right:0;bottom:30px;width:36px;height:40px;border:9px solid #eedcc4;border-left:none;border-radius:0 24px 24px 0}
+  .cup .coffee{position:absolute;top:8px;left:8px;right:8px;height:14px;border-radius:50%;background:#6b3f22}
+  .steam{position:absolute;top:-56px;width:10px;height:44px;border-radius:10px;background:linear-gradient(#fff0,#fff6,#fff0);animation:steam 2.4s ease-in-out infinite}
+  .steam:nth-child(1){left:22px}.steam:nth-child(2){left:46px;animation-delay:.6s}.steam:nth-child(3){left:70px;animation-delay:1.2s}
+  @keyframes steam{0%{opacity:0;transform:translateY(10px) scaleX(1)}50%{opacity:1}100%{opacity:0;transform:translateY(-14px) scaleX(1.6)}}
+
+  .lead{text-align:center}
+  .lead h2{font-size:22px;line-height:1.25}
+  .lead p{color:var(--muted);margin:10px auto 0;max-width:300px;line-height:1.45}
+
+  .btn{display:block;width:100%;border:none;border-radius:16px;padding:16px;font:700 16px Manrope,system-ui,sans-serif;cursor:pointer;transition:transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#2a1608;margin-top:22px;box-shadow:0 8px 24px #e8a25a40}
+  .btn.ghost{background:transparent;color:var(--accent2);border:1px solid var(--line);margin-top:10px}
+
+  /* quiz */
+  .progress{display:flex;gap:6px;margin:6px 0 22px}
+  .progress i{flex:1;height:4px;border-radius:4px;background:var(--line)}
+  .progress i.on{background:var(--accent)}
+  .q h2{font-size:21px;line-height:1.3}
+  .q .hint{color:var(--muted);margin-top:6px;font-size:14px}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+  .opt{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px 12px;text-align:center;cursor:pointer;transition:.15s;color:var(--cream);font:600 15px Manrope,system-ui,sans-serif}
+  .opt .e{font-size:34px;display:block;margin-bottom:8px}
+  .opt small{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:4px}
+  .opt.sel{border-color:var(--accent);background:#4a3020}
+  .back{background:none;border:none;color:var(--muted);font:600 14px Manrope,system-ui,sans-serif;cursor:pointer;padding:4px 0}
+
+  /* result */
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .best{background:linear-gradient(170deg,#3d2c20,#2a1e17);border:1px solid var(--line);border-radius:24px;padding:22px 18px;text-align:center;margin-top:14px}
+  .badge{display:inline-block;font-size:12px;font-weight:700;color:var(--accent2);border:1px solid #e8a25a66;border-radius:99px;padding:5px 12px}
+  .art{width:120px;height:120px;margin:16px auto 8px;border-radius:50%;display:grid;place-items:center;font-size:64px}
+  .best h3{font-size:22px}
+  .best .tag{color:var(--muted);margin-top:4px}
+  .meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .pill{font-size:12px;background:#ffffff10;border-radius:99px;padding:5px 10px;color:var(--cream)}
+  .price{font-family:Unbounded;font-size:20px;color:var(--accent2);margin-top:14px}
+  .alts{margin-top:22px}
+  .alts h4{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:10px}
+
+  /* list rows */
+  .row{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px;margin-bottom:10px}
+  .row .ic{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:30px;flex:none}
+  .row .tx{flex:1;min-width:0}
+  .row .tx b{display:block;font-size:15px}
+  .row .tx span{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .pr{font-weight:700;font-size:14px;color:var(--accent2);white-space:nowrap}
+  .add{border:none;background:var(--accent);color:#2a1608;width:34px;height:34px;border-radius:12px;font:700 20px Manrope,system-ui,sans-serif;cursor:pointer;flex:none}
+  .add.in{background:var(--ok)}
+
+  .tabs{display:flex;gap:8px;overflow-x:auto;margin:14px 0 16px;scrollbar-width:none}
+  .tabs button{flex:none;background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:8px 14px;font:600 14px Manrope,system-ui,sans-serif;cursor:pointer}
+  .tabs button.on{background:var(--cream);color:var(--bg);border-color:var(--cream)}
+
+  /* order */
+  .ordnum{font-family:Unbounded;font-size:64px;color:var(--accent2);text-align:center;margin:18px 0 4px}
+  .center{text-align:center}
+  .total{display:flex;justify-content:space-between;font-weight:700;font-size:17px;margin:14px 4px}
+  .empty{color:var(--muted);text-align:center;padding:40px 0}
+
+  /* bottom nav */
+  nav{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(#1c141000,var(--bg) 30%)}
+  nav .bar{max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-around;background:#2a1e17ee;backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:24px;padding:8px}
+  nav button{background:none;border:none;color:var(--muted);font:600 11px Manrope,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;position:relative}
+  nav button svg{width:22px;height:22px}
+  nav button.on{color:var(--cream)}
+  nav .mid{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#2a1608!important;padding:12px 20px;border-radius:18px;font-size:14px}
+  .cnt{position:absolute;top:-2px;right:2px;background:var(--accent);color:#2a1608;font-size:10px;border-radius:99px;min-width:16px;height:16px;display:grid;place-items:center;padding:0 4px}
+  .cnt[hidden]{display:none}
+  .demo{color:#c9b39b88;font-size:11px;text-align:center;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HOME -->
+  <section class="screen on" id="home">
+    <div class="brand">
+      <div class="logo">Тёплое <span>зерно</span></div>
+      <div class="sub">кофейня · подбор напитка</div>
+      <div class="table-chip" id="tableChip" hidden></div>
+    </div>
+    <div class="hero"><div class="glow"></div>
+      <div class="cup"><div class="steam"></div><div class="steam"></div><div class="steam"></div>
+        <div class="handle"></div><div class="body"></div><div class="coffee"></div></div>
+    </div>
+    <div class="lead">
+      <h2>Не знаете, что взять?</h2>
+      <p>Ответьте на 3 вопроса — подберём напиток под ваше настроение</p>
+    </div>
+    <button class="btn primary" onclick="startQuiz()">Подобрать напиток</button>
+    <button class="btn ghost" onclick="go('menu')">Смотреть меню</button>
+    <p class="demo">Демо-версия. Название и меню вымышлены.</p>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="quiz">
+    <button class="back" onclick="quizBack()">← Назад</button>
+    <div class="progress" id="prog"><i></i><i></i><i></i></div>
+    <div class="q" id="qbox"></div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="result">
+    <div class="top"><h2 style="font-size:22px">Ваш напиток</h2><button class="back" onclick="startQuiz()">Пройти заново</button></div>
+    <p style="color:var(--muted);margin-top:6px" id="resSub"></p>
+    <div id="resBest"></div>
+    <div class="alts"><h4>Ещё может понравиться</h4><div id="resAlts"></div></div>
+  </section>
+
+  <!-- MENU -->
+  <section class="screen" id="menu">
+    <h2 style="font-size:22px;margin-top:6px">Меню</h2>
+    <div class="tabs" id="tabs"></div>
+    <div id="menuList"></div>
+  </section>
+
+  <!-- CART / ORDER -->
+  <section class="screen" id="cart">
+    <h2 style="font-size:22px;margin-top:6px">Заказ</h2>
+    <div id="cartBox"></div>
+  </section>
+
+  <section class="screen" id="done">
+    <div class="center" style="padding-top:30px">
+      <div style="font-size:56px">☕</div>
+      <h2 style="font-size:20px;margin-top:10px">Заказ готов к передаче</h2>
+      <div class="ordnum" id="ordNum"></div>
+      <p style="color:var(--muted)" id="ordInfo"></p>
+      <p style="color:var(--muted);margin-top:14px;line-height:1.5">Покажите этот экран бариста.<br>Оплата — через Kaspi QR на кассе.</p>
+      <button class="btn ghost" style="margin-top:24px" onclick="newOrder()">Новый заказ</button>
+    </div>
+  </section>
+</div>
+
+<nav><div class="bar">
+  <button data-go="home" class="on" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Главная</button>
+  <button data-go="menu" onclick="go('menu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Меню</button>
+  <button class="mid" onclick="startQuiz()">Подобрать</button>
+  <button data-go="cart" onclick="go('cart')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>Заказ<span class="cnt" id="cnt" hidden></span></button>
+</div></nav>
+
+<script>
+/* ---------- DATA: this is the only part you change per client ---------- */
+// taste: sweet | classic | fruity | fresh ; strength: 0 no coffee, 1 soft, 2 medium, 3 strong ; temp: hot | iced
+const DRINKS = [
+  {id:"esp", cat:"Кофе", name:"Эспрессо", e:"☕", c:"#6b3f22", price:900, taste:"classic", strength:3, temp:"hot", tag:"Чистый вкус зерна", desc:"Плотный, с горчинкой и шоколадом"},
+  {id:"amr", cat:"Кофе", name:"Американо", e:"☕", c:"#7a4a2a", price:1100, taste:"classic", strength:2, temp:"hot", tag:"Классика на каждый день", desc:"Эспрессо + горячая вода"},
+  {id:"cap", cat:"Кофе", name:"Капучино", e:"🥛", c:"#b98a5e", price:1400, taste:"classic", strength:2, temp:"hot", tag:"Мягкая пенка, ровный вкус", desc:"Эспрессо, молоко, плотная пена"},
+  {id:"flt", cat:"Кофе", name:"Флэт уайт", e:"☕", c:"#9a6a40", price:1600, taste:"classic", strength:3, temp:"hot", tag:"Крепко, но бархатно", desc:"Двойной эспрессо и тонкое молоко"},
+  {id:"raf", cat:"Кофе", name:"Раф ваниль", e:"🍦", c:"#d9b98e", price:1700, taste:"sweet", strength:1, temp:"hot", tag:"Как десерт в чашке", desc:"Сливки, ваниль, эспрессо"},
+  {id:"crm", cat:"Кофе", name:"Латте солёная карамель", e:"🍯", c:"#c98a3e", price:1800, taste:"sweet", strength:1, temp:"hot", tag:"Сладко и чуть солоно", desc:"Латте с домашней карамелью"},
+  {id:"hal", cat:"Кофе", name:"Латте халва", e:"🌰", c:"#a8784a", price:1800, taste:"sweet", strength:2, temp:"hot", tag:"Орехово и уютно", desc:"Латте, кунжутная халва, корица"},
+  {id:"ilt", cat:"Холодное", name:"Айс латте", e:"🧊", c:"#8fb3c9", price:1600, taste:"classic", strength:2, temp:"iced", tag:"Свежо и мягко", desc:"Эспрессо, молоко, лёд"},
+  {id:"ton", cat:"Холодное", name:"Эспрессо-тоник", e:"🍋", c:"#e5d35a", price:1700, taste:"fresh", strength:3, temp:"iced", tag:"Бодрит как холодный душ", desc:"Тоник, лёд, эспрессо, цедра"},
+  {id:"bmb", cat:"Холодное", name:"Бамбл", e:"🍊", c:"#f0954a", price:1800, taste:"fruity", strength:2, temp:"iced", tag:"Апельсин встречает кофе", desc:"Апельсиновый сок, карамель, эспрессо"},
+  {id:"cbr", cat:"Холодное", name:"Колд брю вишня", e:"🍒", c:"#c23a4a", price:1800, taste:"fruity", strength:3, temp:"iced", tag:"Ягодно и крепко", desc:"12 часов настаивания, вишнёвый сироп"},
+  {id:"mch", cat:"Не кофе", name:"Матча латте", e:"🍵", c:"#7fae5a", price:1700, taste:"fresh", strength:0, temp:"hot", tag:"Спокойная энергия", desc:"Японская матча и молоко"},
+  {id:"imc", cat:"Не кофе", name:"Айс матча манго", e:"🥭", c:"#f2b240", price:1900, taste:"fruity", strength:0, temp:"iced", tag:"Тропики без кофеина", desc:"Матча, манго-пюре, лёд"},
+  {id:"cho", cat:"Не кофе", name:"Горячий шоколад", e:"🍫", c:"#5a3220", price:1500, taste:"sweet", strength:0, temp:"hot", tag:"Обнимашка в кружке", desc:"Бельгийский шоколад, молоко"},
+  {id:"tea", cat:"Не кофе", name:"Облепиховый чай", e:"🫖", c:"#f08a2a", price:1400, taste:"fruity", strength:0, temp:"hot", tag:"Согревает в холод", desc:"Облепиха, мёд, имбирь"},
+  {id:"lem", cat:"Не кофе", name:"Лимонад мята-лайм", e:"🌿", c:"#5ac28a", price:1300, taste:"fresh", strength:0, temp:"iced", tag:"Максимум свежести", desc:"Лайм, мята, содовая"},
+  {id:"chz", cat:"Десерты", name:"Чизкейк Сан-Себастьян", e:"🍰", c:"#e8c58a", price:1900, desc:"Карамельная корочка, кремовый центр"},
+  {id:"crs", cat:"Десерты", name:"Круассан миндальный", e:"🥐", c:"#d9a05a", price:1200, desc:"Свежая выпечка каждое утро"},
+  {id:"cok", cat:"Десерты", name:"Печенье с шоколадом", e:"🍪", c:"#a8743e", price:700, desc:"Хрустящее снаружи, мягкое внутри"},
+];
+const QUESTIONS = [
+  {key:"taste", title:"Какой вкус сейчас хочется?", hint:"Выберите один вариант", opts:[
+    {v:"sweet", e:"🍯", t:"Сладкое", s:"карамель, ваниль"},
+    {v:"classic", e:"☕", t:"Классика", s:"чистый кофе"},
+    {v:"fruity", e:"🍒", t:"Фруктовое", s:"ягоды, цитрус"},
+    {v:"fresh", e:"🌿", t:"Свежее", s:"лёгкое, бодрое"}]},
+  {key:"strength", title:"Насколько бодрым нужно быть?", hint:"Это про количество кофе", opts:[
+    {v:0, e:"😌", t:"Без кофе", s:"вечер / чай"},
+    {v:1, e:"🙂", t:"Чуть-чуть", s:"мягко"},
+    {v:2, e:"😃", t:"Нормально", s:"как обычно"},
+    {v:3, e:"⚡", t:"Максимум", s:"сессия, дедлайн"}]},
+  {key:"temp", title:"Горячий или холодный?", hint:"", opts:[
+    {v:"hot", e:"🔥", t:"Горячий", s:"согреться"},
+    {v:"iced", e:"🧊", t:"Со льдом", s:"освежиться"}]},
+];
+
+/* ---------- Telegram integration (works in a normal browser too) ---------- */
+const tg = window.Telegram && window.Telegram.WebApp;
+let TABLE = null;
+if (tg) {
+  tg.ready(); tg.expand();
+  try { tg.setHeaderColor("#1c1410"); tg.setBackgroundColor("#1c1410"); } catch(e){}
+  const sp = tg.initDataUnsafe && tg.initDataUnsafe.start_param;   // from t.me/bot?startapp=table7
+  if (sp && /^table\d+$/.test(sp)) TABLE = sp.replace("table","");
+}
+const urlT = new URLSearchParams(location.search).get("table");
+if (!TABLE && urlT) TABLE = urlT;
+if (TABLE) { const c = document.getElementById("tableChip"); c.hidden = false; c.textContent = "Стол №" + TABLE; }
+const haptic = (t="light") => { try { tg && tg.HapticFeedback.impactOccurred(t); } catch(e){} };
+const fmt = n => n.toLocaleString("ru-RU").replace(/,/g," ") + " ₸";
+
+/* ---------- navigation ---------- */
+function go(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+  document.querySelectorAll("nav [data-go]").forEach(b => b.classList.toggle("on", b.dataset.go === id));
+  if (id === "menu") renderMenu();
+  if (id === "cart") renderCart();
+  window.scrollTo(0,0);
+  if (tg && tg.BackButton) { id === "home" ? tg.BackButton.hide() : tg.BackButton.show(); }
+}
+if (tg && tg.BackButton) tg.BackButton.onClick(() => go("home"));
+
+/* ---------- quiz ---------- */
+let step = 0, ans = {};
+function startQuiz(){ step = 0; ans = {}; go("quiz"); renderQ(); }
+function quizBack(){ if (step === 0) go("home"); else { step--; renderQ(); } }
+function renderQ(){
+  const q = QUESTIONS[step];
+  document.querySelectorAll("#prog i").forEach((el,i) => el.classList.toggle("on", i <= step));
+  document.getElementById("qbox").innerHTML =
+    `<h2>${q.title}</h2>${q.hint ? `<p class="hint">${q.hint}</p>` : ""}
+     <div class="opts">${q.opts.map((o,i) =>
+       `<button class="opt ${ans[q.key]===o.v?'sel':''}" onclick="pick(${i})"><span class="e">${o.e}</span>${o.t}<small>${o.s}</small></button>`).join("")}</div>`;
+}
+function pick(i){
+  const q = QUESTIONS[step]; ans[q.key] = q.opts[i].v; haptic();
+  renderQ();
+  setTimeout(() => { if (step < QUESTIONS.length - 1) { step++; renderQ(); } else showResult(); }, 180);
+}
+function score(d){
+  let s = 0;
+  s += d.taste === ans.taste ? 5 : 0;
+  s += 3 - Math.abs(d.strength - ans.strength) * 1.5;
+  s += d.temp === ans.temp ? 4 : 0;
+  if (ans.strength === 0 && d.strength > 0) s -= 6;   // never push caffeine on "без кофе"
+  return s;
+}
+function showResult(){
+  const ranked = DRINKS.filter(d => d.taste).map(d => ({d, s: score(d)})).sort((a,b) => b.s - a.s);
+  const best = ranked[0].d;
+  const words = {sweet:"сладкое", classic:"классика", fruity:"фруктовое", fresh:"свежее"};
+  const str = ["без кофе","мягко","средне","крепко"];
+  document.getElementById("resSub").textContent =
+    `${words[ans.taste]}, ${str[ans.strength]}, ${ans.temp === "hot" ? "горячий" : "со льдом"} — вот что советуем`;
+  document.getElementById("resBest").innerHTML =
+    `<div class="best"><span class="badge">★ Лучшее совпадение</span>
+       <div class="art" style="background:radial-gradient(circle,${best.c}88,transparent 70%)">${best.e}</div>
+       <h3>${best.name}</h3><p class="tag">${best.tag}</p>
+       <div class="meta"><span class="pill">${best.desc}</span></div>
+       <div class="price">${fmt(best.price)}</div>
+       <button class="btn primary" onclick="addAndGo('${best.id}')">Хочу этот</button></div>`;
+  document.getElementById("resAlts").innerHTML = ranked.slice(1,4).map(r => rowHTML(r.d)).join("");
+  go("result"); haptic("medium");
+}
+
+/* ---------- menu ---------- */
+const CATS = [...new Set(DRINKS.map(d => d.cat))];
+let curCat = CATS[0];
+function rowHTML(d){
+  const inCart = cart[d.id];
+  return `<div class="row"><div class="ic" style="background:${d.c}33">${d.e}</div>
+    <div class="tx"><b>${d.name}</b><span>${d.desc}</span></div>
+    <div class="pr">${fmt(d.price)}</div>
+    <button class="add ${inCart?'in':''}" onclick="add('${d.id}', this)">${inCart ? inCart : "+"}</button></div>`;
+}
+function renderMenu(){
+  document.getElementById("tabs").innerHTML = CATS.map(c =>
+    `<button class="${c===curCat?'on':''}" onclick="curCat='${c}';renderMenu()">${c}</button>`).join("");
+  document.getElementById("menuList").innerHTML = DRINKS.filter(d => d.cat === curCat).map(rowHTML).join("");
+}
+
+/* ---------- cart & order (base version: no server, show screen to barista) ---------- */
+const cart = {};
+function updCnt(){ const n = Object.values(cart).reduce((a,b)=>a+b,0); const c = document.getElementById("cnt"); c.hidden = !n; c.textContent = n; }
+function add(id, btn){ cart[id] = (cart[id]||0) + 1; haptic(); updCnt(); if (btn){ btn.classList.add("in"); btn.textContent = cart[id]; } }
+function addAndGo(id){ add(id); go("cart"); }
+function change(id, k){ cart[id] += k; if (cart[id] <= 0) delete cart[id]; haptic(); updCnt(); renderCart(); }
+function renderCart(){
+  const ids = Object.keys(cart);
+  const box = document.getElementById("cartBox");
+  if (!ids.length){ box.innerHTML = `<p class="empty">Пока пусто.<br>Подберите напиток или выберите в меню.</p>
+      <button class="btn primary" onclick="startQuiz()">Подобрать напиток</button>`; return; }
+  let total = 0;
+  box.innerHTML = ids.map(id => { const d = DRINKS.find(x => x.id === id); total += d.price * cart[id];
+    return `<div class="row"><div class="ic" style="background:${d.c}33">${d.e}</div>
+      <div class="tx"><b>${d.name}</b><span>${fmt(d.price)} × ${cart[id]}</span></div>
+      <button class="add" style="background:var(--line);color:var(--cream)" onclick="change('${id}',-1)">−</button>
+      <button class="add" onclick="change('${id}',1)">+</button></div>`; }).join("") +
+    `<div class="total"><span>Итого</span><span>${fmt(total)}</span></div>
+     <button class="btn primary" onclick="placeOrder(${total})">Оформить заказ</button>`;
+}
+function placeOrder(total){
+  const num = Math.floor(100 + Math.random()*900);
+  document.getElementById("ordNum").textContent = "#" + num;
+  document.getElementById("ordInfo").textContent = (TABLE ? "Стол №" + TABLE + " · " : "") + fmt(total);
+  try { tg && tg.HapticFeedback.notificationOccurred("success"); } catch(e){}
+  for (const k in cart) delete cart[k]; updCnt();
+  go("done");
+}
+function newOrder(){ go("home"); }
+</script>
+</body>
+</html>
